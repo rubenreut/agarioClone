@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agar.io Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="scoreBoard" class="score-board">Score: 0</div>
+        <div id="playerName" class="player-name">Player</div>
+    </div>
+    
+    <div id="startScreen" class="start-screen">
+        <h1>Agar.io Clone</h1>
+        <input type="text" id="nameInput" placeholder="Enter your name" maxlength="15">
+        <button id="startButton">Play</button>
+    </div>
+
+    <div id="gameOverScreen" class="game-over-screen hidden">
+        <h2>Game Over</h2>
+        <p>Your Score: <span id="finalScore">0</span></p>
+        <button id="restartButton">Play Again</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
