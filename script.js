@@ -256,3 +256,165 @@ function moveEnemies() {
         }
     });
 }
+
+function checkFoodCollisions() {
+    foods = foods.filter(food => {
+        const dist = Math.sqrt(Math.pow(player.x - food.x, 2) + Math.pow(player.y - food.y, 2));
+        if (dist < player.radius) {
+            // Player eats food
+            player.radius += food.radius / 10;
+            score += 10;
+            document.getElementById('scoreBoard').textContent = 'Score: ' + score;
+            return false;
+        }
+        return true;
+    });
+}
+
+function checkEnemyCollisions() {
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        const dist = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
+        
+        if (dist < player.radius + enemy.radius) {
+            if (player.radius > enemy.radius * 1.1) {
+                // Player eats enemy
+                player.radius += enemy.radius / 4;
+                score += Math.floor(enemy.radius);
+                document.getElementById('scoreBoard').textContent = 'Score: ' + score;
+                enemies.splice(i, 1);
+                
+                // Create new enemy
+                const size = PLAYER_START_SIZE + Math.random() * 50 - 25;
+                enemies.push({
+                    x: Math.random() * WORLD_SIZE,
+                    y: Math.random() * WORLD_SIZE,
+                    radius: size,
+                    color: getRandomColor(),
+                    speedMultiplier: 4 - (size / 50),
+                    targetX: Math.random() * WORLD_SIZE,
+                    targetY: Math.random() * WORLD_SIZE
+                });
+            } else if (enemy.radius > player.radius * 1.1) {
+                // Enemy eats player - Game Over
+                gameOver();
+                return;
+            }
+        }
+    }
+}
+
+function gameOver() {
+    gameRunning = false;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('gameOverScreen').classList.remove('hidden');
+}
+
+function render() {
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw background grid
+    drawGrid();
+    
+    // Draw world boundary
+    drawWorldBoundary();
+    
+    // Draw food
+    foods.forEach(food => {
+        drawCircle(food.x - cameraX, food.y - cameraY, food.radius, food.color);
+    });
+    
+    // Draw enemies
+    enemies.forEach(enemy => {
+        drawCircle(enemy.x - cameraX, enemy.y - cameraY, enemy.radius, enemy.color);
+    });
+    
+    // Draw player
+    drawCircle(player.x - cameraX, player.y - cameraY, player.radius, player.color);
+    
+    // Draw player name
+    drawText(playerName, player.x - cameraX, player.y - cameraY, player.radius);
+    
+    // Draw enemies' names
+    enemies.forEach((enemy, index) => {
+        drawText('Bot ' + (index + 1), enemy.x - cameraX, enemy.y - cameraY, enemy.radius);
+    });
+}
+
+function drawCircle(x, y, radius, color) {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.closePath();
+    
+    // Draw a darker border
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = darkenColor(color);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.closePath();
+}
+
+function drawText(text, x, y, radius) {
+    ctx.font = Math.max(12, radius / 2) + 'px Arial';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+}
+
+function drawGrid() {
+    const gridSize = 100;
+    const offsetX = cameraX % gridSize;
+    const offsetY = cameraY % gridSize;
+    
+    ctx.beginPath();
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 1;
+    
+    // Vertical lines
+    for (let x = -offsetX; x < canvas.width; x += gridSize) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+    }
+    
+    // Horizontal lines
+    for (let y = -offsetY; y < canvas.height; y += gridSize) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+    }
+    
+    ctx.stroke();
+    ctx.closePath();
+}
+
+function drawWorldBoundary() {
+    ctx.beginPath();
+    ctx.strokeStyle = '#ff0000';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(-cameraX, -cameraY, WORLD_SIZE, WORLD_SIZE);
+    ctx.closePath();
+}
+
+function getRandomColor() {
+    return COLORS[Math.floor(Math.random() * COLORS.length)];
+}
+
+function darkenColor(color) {
+    // Convert hex to RGB
+    const r = parseInt(color.substr(1, 2), 16);
+    const g = parseInt(color.substr(3, 2), 16);
+    const b = parseInt(color.substr(5, 2), 16);
+    
+    // Darken by 30%
+    const darkenAmount = 0.3;
+    const dr = Math.floor(r * (1 - darkenAmount));
+    const dg = Math.floor(g * (1 - darkenAmount));
+    const db = Math.floor(b * (1 - darkenAmount));
+    
+    // Convert back to hex
+    return `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
+}
